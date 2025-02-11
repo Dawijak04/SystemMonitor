@@ -6,7 +6,7 @@
         "log_file": "app.log",
         "format": "%(asctime)s - %(levelname)s - %(message)s"
     },
-    "DEBUG": true,
+    "DEBUG": false,
     "HOST": "0.0.0.0",
     "PORT": 5000,
     "WELCOME_MESSAGE": "Hello World",

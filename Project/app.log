@@ -139,3 +139,93 @@
 2025-01-20 19:49:02,609 - WARNING -  * Debugger is active!
 2025-01-20 20:21:49,335 - WARNING -  * Debugger is active!
 2025-01-20 20:22:43,536 - WARNING -  * Debugger is active!
+2025-02-06 20:25:04,499 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-06 20:25:06,811 - ERROR - external_metrics.json does not exist
+2025-02-06 20:25:46,015 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-06 20:25:48,396 - ERROR - external_metrics.json does not exist
+2025-02-06 20:25:49,718 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-06 20:25:55,333 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-06 20:26:13,006 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-06 20:26:45,049 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-06 20:27:27,578 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-06 20:27:32,576 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-06 20:27:36,002 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-06 20:27:40,976 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-06 20:27:45,974 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-06 20:27:46,186 - ERROR - external_metrics.json does not exist
+2025-02-06 20:27:51,179 - ERROR - external_metrics.json does not exist
+2025-02-06 20:27:56,173 - ERROR - external_metrics.json does not exist
+2025-02-06 20:28:01,174 - ERROR - external_metrics.json does not exist
+2025-02-06 20:28:06,175 - ERROR - external_metrics.json does not exist
+2025-02-06 20:28:11,178 - ERROR - external_metrics.json does not exist
+2025-02-06 20:28:16,175 - ERROR - external_metrics.json does not exist
+2025-02-06 20:28:21,179 - ERROR - external_metrics.json does not exist
+2025-02-06 20:28:26,171 - ERROR - external_metrics.json does not exist
+2025-02-06 20:28:31,171 - ERROR - external_metrics.json does not exist
+2025-02-06 20:28:35,988 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-06 20:28:37,470 - ERROR - external_metrics.json does not exist
+2025-02-06 20:28:40,474 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-06 20:38:35,049 - ERROR - Error collecting metrics: 'WeatherMetrics' object has no attribute 'get_metrics'
+2025-02-06 20:45:47,030 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-06 20:45:48,907 - ERROR - external_metrics.json does not exist
+2025-02-06 20:45:52,918 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-06 20:45:55,275 - ERROR - external_metrics.json does not exist
+2025-02-06 20:46:00,267 - ERROR - external_metrics.json does not exist
+2025-02-06 20:46:45,506 - ERROR - external_metrics.json does not exist
+2025-02-06 20:46:46,332 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-06 20:46:48,733 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-06 20:46:53,748 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-06 20:46:58,740 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-06 21:03:53,246 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-06 21:03:54,402 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-06 21:03:59,970 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-06 21:04:04,952 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-06 21:04:09,963 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-06 21:04:14,951 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-06 21:04:19,955 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-06 21:04:24,969 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-06 21:04:30,832 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-06 21:04:47,009 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-06 21:05:04,121 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-06 21:05:40,623 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-06 21:06:00,565 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-06 22:02:42,335 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-06 22:02:43,768 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-06 22:02:46,718 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-06 22:02:47,849 - ERROR - external_metrics.json does not exist
+2025-02-07 09:04:03,500 - ERROR - external_metrics.json does not exist
+2025-02-07 09:04:08,491 - ERROR - external_metrics.json does not exist
+2025-02-07 09:04:09,081 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-07 09:41:59,781 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-07 09:42:02,678 - ERROR - external_metrics.json does not exist
+2025-02-07 09:42:09,112 - ERROR - external_metrics.json does not exist
+2025-02-07 09:42:12,678 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-07 09:42:18,075 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-07 09:42:22,657 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-07 09:42:27,665 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-07 09:42:32,655 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-07 09:42:37,646 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-07 09:42:42,648 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-07 09:42:47,648 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-07 09:42:52,655 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-07 09:42:57,649 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-07 09:43:02,657 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-07 09:43:07,665 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-07 09:43:12,654 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-07 09:43:17,662 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-07 09:43:22,650 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-07 09:43:28,074 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-07 09:43:33,094 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-07 09:43:38,071 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-07 09:43:43,069 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-07 09:43:48,081 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-07 09:43:53,076 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-07 09:43:58,073 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-07 09:44:03,067 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-07 09:44:08,066 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-07 09:44:13,066 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-07 09:44:18,065 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-07 09:44:23,064 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-07 09:44:45,062 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-07 09:45:45,054 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
+2025-02-07 09:46:45,048 - ERROR - Error reading local metrics: [Errno 2] No such file or directory: 'local_metrics.json'
