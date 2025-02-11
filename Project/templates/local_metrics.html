@@ -47,25 +47,51 @@
         .button:hover {
             background-color: #45a049;
         }
+        #local-time {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 1.1em;
+            color: #666;
+        }
     </style>
     <script>
+        function updateLocalTime() {
+            const now = new Date();
+            document.getElementById('local-time').textContent = now.toLocaleString();
+        }
+
         function updateMetrics() {
             fetch('/api/local-metrics')
                 .then(response => response.json())
                 .then(data => {
-                    document.getElementById('cpu-usage').textContent = data.cpu_usage + '%';
-                    document.getElementById('memory-usage').textContent = data.memory_usage + '%';
+                    document.getElementById('cpu-usage').textContent = data.metrics.cpu_usage + '%';
+                    document.getElementById('memory-usage').textContent = data.metrics.memory_usage + '%';
+                    
+                    // Format and display the timestamp
+                    const timestamp = new Date(data.last_updated).toLocaleString();
+                    document.getElementById('update-time').textContent = timestamp;
                 })
                 .catch(error => console.error('Error:', error));
         }
 
+        // Update metrics every 5 seconds
         setInterval(updateMetrics, 5000);
+        // Update local time every second
+        setInterval(updateLocalTime, 1000);
+        
+        // Initial calls
         updateMetrics();
+        updateLocalTime();
     </script>
 </head>
 <body>
+    <div id="local-time"></div>
     <div class="container">
         <h1>Local System Metrics</h1>
+        <div id="last-updated" style="color: #666; font-size: 0.9em; margin-bottom: 15px;">
+            Last updated: <span id="update-time">Loading...</span>
+        </div>
         <div class="metrics">
             <div class="metric-card">
                 <div class="metric-label">CPU Usage</div>

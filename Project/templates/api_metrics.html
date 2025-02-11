@@ -53,6 +53,13 @@
         .button:hover {
             background-color: #45a049;
         }
+        #local-time {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 1.1em;
+            color: #666;
+        }
     </style>
     <script>
         function updateMetrics() {
@@ -93,11 +100,19 @@
                 });
         }
 
+        function updateLocalTime() {
+            const now = new Date();
+            document.getElementById('local-time').textContent = now.toLocaleString();
+        }
+
         setInterval(updateMetrics, 5000);
         updateMetrics();
+        setInterval(updateLocalTime, 1000);
+        updateLocalTime();
     </script>
 </head>
 <body>
+    <div id="local-time"></div>
     <div class="container">
         <h1>Weather Data</h1>
         <div style="color: #666; margin-bottom: 20px;" id="last-updated">Last updated: Loading...</div>

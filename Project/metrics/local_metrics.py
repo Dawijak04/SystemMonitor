@@ -16,17 +16,19 @@ class LocalMetrics:
             cpu_percent = psutil.cpu_percent(interval=1)
             memory = psutil.virtual_memory()
             
-            metrics = {
-                "cpu_usage": cpu_percent,
-                "memory_usage": memory.percent,
-                "timestamp": datetime.now().isoformat()
+            metrics_data = {
+                "metrics": {
+                    "cpu_usage": cpu_percent,
+                    "memory_usage": memory.percent
+                },
+                "last_updated": datetime.now().isoformat()
             }
             
             # Save metrics to JSON file
             with open(self.metrics_file, 'w') as f:
-                json.dump(metrics, f)
+                json.dump(metrics_data, f)
             
-            return metrics
+            return metrics_data
         except Exception as e:
             self.logger.error(f"Error getting local metrics: {str(e)}")
             return None

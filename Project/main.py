@@ -27,11 +27,22 @@ METRICS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'metrics_
 LOCAL_METRICS_PATH = os.path.join(METRICS_DIR, 'local_metrics.json')
 EXTERNAL_METRICS_PATH = os.path.join(METRICS_DIR, 'external_metrics.json')
 
+# Add these constants after the existing path definitions
+CACHE_DURATION = timedelta(minutes=5)  # Adjust cache duration as needed
+
 # Initialize WeatherMetrics
 weather_metrics = WeatherMetrics(
     logger=logger,
     api_key=WEATHER_API_KEY
 )
+
+def is_cache_valid(file_path):
+    """Check if cache file exists and is within valid timeframe"""
+    if not os.path.exists(file_path):
+        return False
+    
+    file_modified_time = datetime.fromtimestamp(os.path.getmtime(file_path))
+    return datetime.now() - file_modified_time < CACHE_DURATION
 
 @app.route('/')
 def hello_world():
@@ -50,14 +61,14 @@ def api_metrics():
 @app.route('/api/external-metrics')
 def api_external_metrics():
     try:
-        if not os.path.exists(EXTERNAL_METRICS_PATH):
-            logger.error("external_metrics.json does not exist")
-            return jsonify({"error": "No metrics data available"}), 404
+        if not is_cache_valid(EXTERNAL_METRICS_PATH):
+            # Cache invalid or missing, trigger collection
+            return trigger_metrics_collection()
             
         with open(EXTERNAL_METRICS_PATH, 'r') as f:
             metrics = json.load(f)
             
-        logger.debug(f"Serving cached weather data")
+        logger.debug("Serving cached weather data")
         return jsonify(metrics)
     except Exception as e:
         logger.error(f"Error reading external metrics: {str(e)}")
@@ -66,9 +77,9 @@ def api_external_metrics():
 @app.route('/api/local-metrics')
 def api_local_metrics():
     try:
-        if not os.path.exists(LOCAL_METRICS_PATH):
-            logger.error("local_metrics.json does not exist")
-            return jsonify({"error": "No metrics data available"}), 404
+        if not is_cache_valid(LOCAL_METRICS_PATH):
+            # Cache invalid or missing, trigger collection
+            return trigger_metrics_collection()
             
         with open(LOCAL_METRICS_PATH, 'r') as f:
             metrics = json.load(f)
