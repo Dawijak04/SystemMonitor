@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Local System Metrics</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .metric-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .metric-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .back-button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #6c757d;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .time-display {
+            font-size: 2em;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .time-info {
+            color: #666;
+            margin-top: 5px;
+        }
+        .status-indicator {
+            padding: 10px;
+            margin: 20px 0;
+            border-radius: 5px;
+            text-align: center;
+            font-weight: bold;
+            border: 2px solid;
+        }
+        .status-offline {
+            background-color: #ffebee;
+            color: #c62828;
+            border-color: #c62828;
+            animation: pulse 2s infinite;
+        }
+        .status-online {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+            border-color: #2e7d32;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        .metric-unavailable {
+            color: #c62828;
+            font-style: italic;
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const socket = io();
+            let lastUpdateTime = null;
+            let statusCheckInterval;
+            let hasReceivedMetrics = false;
+            
+            function updateStatus() {
+                const statusOffline = document.getElementById('status-offline');
+                const statusOnline = document.getElementById('status-online');
+                
+                const isOffline = !hasReceivedMetrics || !lastUpdateTime || (Date.now() - lastUpdateTime) > 3000;
+                
+                if (isOffline) {
+                    statusOffline.style.display = 'block';
+                    statusOnline.style.display = 'none';
+                } else {
+                    statusOffline.style.display = 'none';
+                    statusOnline.style.display = 'block';
+                }
+            }
+            
+            // Update metrics from server
+            socket.on('metrics_update', function(data) {
+                lastUpdateTime = Date.now();
+                hasReceivedMetrics = true;
+                const metrics = typeof data === 'string' ? JSON.parse(data) : data;
+                if (metrics.local) {
+                    document.getElementById('battery').textContent = 
+                        metrics.local.battery_percent !== null ? 
+                        metrics.local.battery_percent + '%' : 'N/A';
+                    document.getElementById('memory').textContent = 
+                        metrics.local.memory_usage + '%';
+                }
+                updateStatus();
+            });
+
+            // Live clock update function
+            function updateClock() {
+                const now = new Date();
+                const timeStr = now.toLocaleTimeString();
+                const dateStr = now.toLocaleDateString();
+                const timezone = now.toLocaleTimeString('en-US', { timeZoneName: 'short' }).split(' ')[2];
+
+                document.getElementById('time').textContent = timeStr;
+                document.getElementById('date').textContent = dateStr;
+                document.getElementById('timezone').textContent = timezone;
+            }
+
+            // Update clock immediately and every second
+            updateClock();
+            setInterval(updateClock, 1000);
+            
+            // Check status every second
+            statusCheckInterval = setInterval(updateStatus, 1000);
+
+            socket.on('connect', () => {
+                console.log('Connected to server');
+                updateStatus();
+            });
+
+            socket.on('disconnect', () => {
+                console.log('Disconnected from server');
+                lastUpdateTime = null;
+                hasReceivedMetrics = false;
+                updateStatus();
+            });
+        });
+    </script>
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="back-button">← Back to Dashboard</a>
+        <h1>Local System Metrics</h1>
+        
+        <div id="status-offline" class="status-indicator status-offline" style="display: block;">
+            ⚠️ Metrics collector is not running - displayed metrics may be outdated
+        </div>
+        
+        <div id="status-online" class="status-indicator status-online" style="display: none;">
+            ✓ Metrics collector is running
+        </div>
+        
+        <div class="metric-card time-card">
+            <h2>Local Time</h2>
+            <div class="time-display" id="time">-</div>
+            <div class="time-info" id="date">-</div>
+            <div class="time-info" id="timezone">-</div>
+        </div>
+        
+        <div class="metric-card">
+            <h2>Battery Level</h2>
+            <div class="metric-value" id="battery">-</div>
+        </div>
+        
+        <div class="metric-card">
+            <h2>Memory Usage</h2>
+            <div class="metric-value" id="memory">-</div>
+        </div>
+    </div>
+</body>
+</html> 
