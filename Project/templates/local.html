@@ -44,102 +44,59 @@
             color: #666;
             margin-top: 5px;
         }
-        .status-indicator {
-            padding: 10px;
-            margin: 20px 0;
-            border-radius: 5px;
-            text-align: center;
-            font-weight: bold;
-            border: 2px solid;
-        }
-        .status-offline {
-            background-color: #ffebee;
-            color: #c62828;
-            border-color: #c62828;
-            animation: pulse 2s infinite;
-        }
-        .status-online {
-            background-color: #e8f5e9;
-            color: #2e7d32;
-            border-color: #2e7d32;
-        }
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.7; }
-            100% { opacity: 1; }
-        }
-        .metric-unavailable {
-            color: #c62828;
-            font-style: italic;
-        }
     </style>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const socket = io();
-            let lastUpdateTime = null;
-            let statusCheckInterval;
-            let hasReceivedMetrics = false;
+            console.log('Page loaded');
             
-            function updateStatus() {
-                const statusOffline = document.getElementById('status-offline');
-                const statusOnline = document.getElementById('status-online');
-                
-                const isOffline = !hasReceivedMetrics || !lastUpdateTime || (Date.now() - lastUpdateTime) > 3000;
-                
-                if (isOffline) {
-                    statusOffline.style.display = 'block';
-                    statusOnline.style.display = 'none';
-                } else {
-                    statusOffline.style.display = 'none';
-                    statusOnline.style.display = 'block';
+            // Initial data load
+            const initialDataStr = '{{ initial_data|tojson|safe if initial_data else "null" }}';
+            const data = JSON.parse(initialDataStr);
+            console.log('Initial data:', data);
+            
+            function updateMetrics(data) {
+                if (data && data.local) {
+                    document.getElementById('battery').textContent = 
+                        data.local.battery_percent + '%';
+                    document.getElementById('memory').textContent = 
+                        data.local.memory_usage + '%';
+                    document.getElementById('last_update').textContent = 
+                        data.local.timestamp;
                 }
             }
-            
-            // Update metrics from server
-            socket.on('metrics_update', function(data) {
-                lastUpdateTime = Date.now();
-                hasReceivedMetrics = true;
-                const metrics = typeof data === 'string' ? JSON.parse(data) : data;
-                if (metrics.local) {
-                    document.getElementById('battery').textContent = 
-                        metrics.local.battery_percent !== null ? 
-                        metrics.local.battery_percent + '%' : 'N/A';
-                    document.getElementById('memory').textContent = 
-                        metrics.local.memory_usage + '%';
-                }
-                updateStatus();
-            });
 
-            // Live clock update function
+            // Initial update
+            updateMetrics(data);
+
+            // Poll for new data every 5 seconds
+            setInterval(() => {
+                fetch('/api/history/local')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.battery && data.battery.length > 0) {
+                            const latest = {
+                                local: {
+                                    battery_percent: data.battery[0],
+                                    memory_usage: data.memory[0],
+                                    timestamp: data.timestamps[0]
+                                }
+                            };
+                            updateMetrics(latest);
+                        }
+                    })
+                    .catch(error => console.error('Error fetching metrics:', error));
+            }, 5000);  // Update every 5 seconds
+
+            // Clock update
             function updateClock() {
                 const now = new Date();
-                const timeStr = now.toLocaleTimeString();
-                const dateStr = now.toLocaleDateString();
-                const timezone = now.toLocaleTimeString('en-US', { timeZoneName: 'short' }).split(' ')[2];
-
-                document.getElementById('time').textContent = timeStr;
-                document.getElementById('date').textContent = dateStr;
-                document.getElementById('timezone').textContent = timezone;
+                document.getElementById('time').textContent = now.toLocaleTimeString();
+                document.getElementById('date').textContent = now.toLocaleDateString();
+                document.getElementById('timezone').textContent = 
+                    now.toLocaleTimeString('en-US', { timeZoneName: 'short' }).split(' ')[2];
             }
-
-            // Update clock immediately and every second
             updateClock();
             setInterval(updateClock, 1000);
-            
-            // Check status every second
-            statusCheckInterval = setInterval(updateStatus, 1000);
-
-            socket.on('connect', () => {
-                console.log('Connected to server');
-                updateStatus();
-            });
-
-            socket.on('disconnect', () => {
-                console.log('Disconnected from server');
-                lastUpdateTime = null;
-                hasReceivedMetrics = false;
-                updateStatus();
-            });
         });
     </script>
 </head>
@@ -147,14 +104,6 @@
     <div class="container">
         <a href="/" class="back-button">← Back to Dashboard</a>
         <h1>Local System Metrics</h1>
-        
-        <div id="status-offline" class="status-indicator status-offline" style="display: block;">
-            ⚠️ Metrics collector is not running - displayed metrics may be outdated
-        </div>
-        
-        <div id="status-online" class="status-indicator status-online" style="display: none;">
-            ✓ Metrics collector is running
-        </div>
         
         <div class="metric-card time-card">
             <h2>Local Time</h2>
@@ -171,6 +120,10 @@
         <div class="metric-card">
             <h2>Memory Usage</h2>
             <div class="metric-value" id="memory">-</div>
+        </div>
+        <div class="card">
+            <h2>Last Updated</h2>
+            <p id="last_update">-</p>
         </div>
     </div>
 </body>

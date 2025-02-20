@@ -35,103 +35,66 @@
             border-radius: 5px;
             margin-bottom: 20px;
         }
-        .status-indicator {
-            padding: 10px;
-            margin: 20px 0;
-            border-radius: 5px;
-            text-align: center;
-            font-weight: bold;
-            border: 2px solid;
-        }
-        .status-offline {
-            background-color: #ffebee;
-            color: #c62828;
-            border-color: #c62828;
-            animation: pulse 2s infinite;
-        }
-        .status-online {
-            background-color: #e8f5e9;
-            color: #2e7d32;
-            border-color: #2e7d32;
-        }
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.7; }
-            100% { opacity: 1; }
-        }
-        .metric-unavailable {
-            color: #c62828;
-            font-style: italic;
-        }
     </style>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const socket = io();
-            let lastUpdateTime = null;
-            let statusCheckInterval;
-            let hasReceivedMetrics = false;
+            console.log('Page loaded');
             
-            function updateStatus() {
-                const statusOffline = document.getElementById('status-offline');
-                const statusOnline = document.getElementById('status-online');
-                
-                const isOffline = !hasReceivedMetrics || !lastUpdateTime || (Date.now() - lastUpdateTime) > 3000;
-                
-                if (isOffline) {
-                    statusOffline.style.display = 'block';
-                    statusOnline.style.display = 'none';
-                    console.log('Status: Offline', {
-                        hasReceivedMetrics,
-                        lastUpdateTime,
-                        timeSinceUpdate: lastUpdateTime ? Date.now() - lastUpdateTime : 'never'
-                    });
-                    // Update metric displays to show "Metric not collected"
-                    document.getElementById('temperature').innerHTML = 
-                        '<span class="metric-unavailable">Metric not collected</span>';
-                    document.getElementById('humidity').innerHTML = 
-                        '<span class="metric-unavailable">Metric not collected</span>';
-                    document.getElementById('description').innerHTML = 
-                        '<span class="metric-unavailable">Metric not collected</span>';
-                    document.getElementById('city').innerHTML = 
-                        '<span class="metric-unavailable">Metric not collected</span>';
-                } else {
-                    statusOffline.style.display = 'none';
-                    statusOnline.style.display = 'block';
-                    console.log('Status: Online');
+            // Initial data load
+            const initialDataStr = '{{ initial_data|tojson|safe if initial_data else "null" }}';
+            const data = JSON.parse(initialDataStr);
+            console.log('Initial data:', data);
+            
+            function updateMetrics(data) {
+                if (data && data.weather) {
+                    document.getElementById('temperature').textContent = 
+                        data.weather.temperature + '°C';
+                    document.getElementById('humidity').textContent = 
+                        data.weather.humidity + '%';
+                    document.getElementById('description').textContent = 
+                        data.weather.description;
+                    document.getElementById('city').textContent = 
+                        data.weather.city;
+                    const timestamp = new Date(data.weather.timestamp);
+                    document.getElementById('last_update').textContent = 
+                        timestamp.toLocaleString();
                 }
             }
-            
-            socket.on('metrics_update', function(data) {
-                lastUpdateTime = Date.now();
-                hasReceivedMetrics = true;
-                const metrics = typeof data === 'string' ? JSON.parse(data) : data;
-                if (metrics.weather) {
-                    document.getElementById('temperature').textContent = 
-                        metrics.weather.temperature + '°C';
-                    document.getElementById('humidity').textContent = 
-                        metrics.weather.humidity + '%';
-                    document.getElementById('description').textContent = 
-                        metrics.weather.description;
-                    document.getElementById('city').textContent = 
-                        metrics.weather.city;
-                }
-                updateStatus();
-            });
-            
-            // Check status every second
-            statusCheckInterval = setInterval(updateStatus, 1000);
 
-            socket.on('connect', () => {
-                console.log('Connected to server');
-                updateStatus();
-            });
+            // Initial update
+            updateMetrics(data);
 
-            socket.on('disconnect', () => {
-                console.log('Disconnected from server');
-                lastUpdateTime = null;
-                hasReceivedMetrics = false;
-                updateStatus();
-            });
+            // Poll for new data every 5 seconds
+            setInterval(() => {
+                fetch('/api/history/weather')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.temperature && data.temperature.length > 0) {
+                            const latest = {
+                                weather: {
+                                    temperature: data.temperature[0],
+                                    humidity: data.humidity[0],
+                                    description: data.description[0],
+                                    city: data.city[0],
+                                    timestamp: data.timestamps[0]
+                                }
+                            };
+                            updateMetrics(latest);
+                        }
+                    })
+                    .catch(error => console.error('Error fetching metrics:', error));
+            }, 5000);  // Update every 5 seconds
+
+            // Clock update
+            function updateClock() {
+                const now = new Date();
+                document.getElementById('time').textContent = now.toLocaleTimeString();
+                document.getElementById('date').textContent = now.toLocaleDateString();
+                document.getElementById('timezone').textContent = 
+                    now.toLocaleTimeString('en-US', { timeZoneName: 'short' }).split(' ')[2];
+            }
+            updateClock();
+            setInterval(updateClock, 1000);
         });
     </script>
 </head>
@@ -139,14 +102,6 @@
     <div class="container">
         <a href="/" class="back-button">← Back to Dashboard</a>
         <h1>Weather Metrics</h1>
-        
-        <div id="status-offline" class="status-indicator status-offline" style="display: block;">
-            ⚠️ Metrics collector is not running - displayed metrics may be outdated
-        </div>
-        
-        <div id="status-online" class="status-indicator status-online" style="display: none;">
-            ✓ Metrics collector is running
-        </div>
         
         <div class="metric-card">
             <h2>Location</h2>
@@ -166,6 +121,11 @@
         <div class="metric-card">
             <h2>Conditions</h2>
             <div class="metric-value" id="description">-</div>
+        </div>
+        
+        <div class="card">
+            <h2>Last Updated</h2>
+            <p id="last_update">-</p>
         </div>
     </div>
 </body>
