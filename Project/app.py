@@ -18,10 +18,10 @@ def get_latest_metrics():
     try:
         latest_local = session.query(LocalMetrics).order_by(LocalMetrics.timestamp.desc()).first()
         latest_weather = session.query(WeatherMetrics).order_by(WeatherMetrics.timestamp.desc()).first()
-        
+
         print("Debug - Latest Local:", latest_local)  # Debug log
         print("Debug - Latest Weather:", latest_weather)  # Debug log
-        
+
         metrics = {}
         if latest_local:
             metrics['local'] = {
@@ -53,7 +53,7 @@ def local():
             'local': {
                 'battery_percent': latest.battery_percent,
                 'memory_usage': latest.memory_usage,
-                'timestamp': latest.timestamp.isoformat()
+                'timestamp': latest.timestamp.strftime("%-m/%-d/%Y, %-I:%M:%S %p")
             }
         } if latest else None
         print("Loading local page, latest metrics:", initial_data)  # Debug log
@@ -84,7 +84,7 @@ def handle_metrics():
     metrics = request.json
     print("Received metrics update:", metrics)
     session = Session()
-    
+
     try:
         if 'local' in metrics:
             local = LocalMetrics(
@@ -92,7 +92,7 @@ def handle_metrics():
                 memory_usage=metrics['local']['memory_usage']
             )
             session.add(local)
-        
+
         if 'weather' in metrics:
             weather = WeatherMetrics(
                 temperature=metrics['weather']['temperature'],
@@ -101,7 +101,7 @@ def handle_metrics():
                 city=metrics['weather']['city']
             )
             session.add(weather)
-        
+
         session.commit()
         print("Metrics saved to database")
         return jsonify({"status": "success"}), 200
@@ -185,4 +185,4 @@ def view_data():
         session.close()
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000) 
+    app.run(debug=True, host='0.0.0.0', port=5000)
