@@ -60,8 +60,9 @@
                         data.local.battery_percent + '%';
                     document.getElementById('memory').textContent = 
                         data.local.memory_usage + '%';
+                    const timestamp = new Date(data.local.timestamp);
                     document.getElementById('last_update').textContent = 
-                        data.local.timestamp;
+                        timestamp.toLocaleString();
                 }
             }
 

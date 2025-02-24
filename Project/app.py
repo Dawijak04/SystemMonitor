@@ -53,7 +53,7 @@ def local():
             'local': {
                 'battery_percent': latest.battery_percent,
                 'memory_usage': latest.memory_usage,
-                'timestamp': latest.timestamp.strftime("%-m/%-d/%Y, %-I:%M:%S %p")
+                'timestamp': latest.timestamp.isoformat()
             }
         } if latest else None
         print("Loading local page, latest metrics:", initial_data)  # Debug log
