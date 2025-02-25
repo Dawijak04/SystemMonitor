@@ -148,6 +148,26 @@ def weather_history():
     finally:
         session.close()
 
+@app.route('/api/local/24h')
+def local_24h_history():
+    session = Session()
+    try:
+        db_ops = DatabaseOperations(session)
+        data = db_ops.get_local_metrics_24h()
+        print("24h data:", data)  # Debug print
+        return data
+    finally:
+        session.close()
+
+@app.route('/api/weather/24h')
+def weather_24h_history():
+    session = Session()
+    try:
+        db_ops = DatabaseOperations(session)
+        return db_ops.get_weather_metrics_24h()
+    finally:
+        session.close()
+
 # @app.route('/view_data')
 # def view_data():
 #     session = Session()

@@ -3,6 +3,7 @@
 <head>
     <title>Weather Metrics</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -96,6 +97,86 @@
             updateClock();
             setInterval(updateClock, 1000);
         });
+
+        let weatherChart;
+
+        function initChart() {
+            const ctx = document.getElementById('weatherChart').getContext('2d');
+            weatherChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'Temperature °C',
+                            data: [],
+                            borderColor: 'rgb(255, 99, 132)',
+                            yAxisID: 'y-temperature',
+                            tension: 0.1
+                        },
+                        {
+                            label: 'Humidity %',
+                            data: [],
+                            borderColor: 'rgb(75, 192, 192)',
+                            yAxisID: 'y-humidity',
+                            tension: 0.1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        'y-temperature': {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: {
+                                display: true,
+                                text: 'Temperature (°C)'
+                            }
+                        },
+                        'y-humidity': {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: {
+                                display: true,
+                                text: 'Humidity (%)'
+                            },
+                            grid: {
+                                drawOnChartArea: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateChart() {
+            fetch('/api/weather/24h')
+                .then(response => response.json())
+                .then(data => {
+                    // Format timestamps for display
+                    const labels = data.timestamps.map(ts => {
+                        const date = new Date(ts);
+                        return date.toLocaleTimeString();
+                    });
+                    
+                    weatherChart.data.labels = labels;
+                    weatherChart.data.datasets[0].data = data.temperature;
+                    weatherChart.data.datasets[1].data = data.humidity;
+                    weatherChart.update();
+                })
+                .catch(error => console.error('Error fetching chart data:', error));
+        }
+
+        // Initialize chart when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            initChart();
+            updateChart();
+            // Update chart every 5 minutes
+            setInterval(updateChart, 300000);
+        });
     </script>
 </head>
 <body>
@@ -126,6 +207,11 @@
         <div class="card">
             <h2>Last Updated</h2>
             <p id="last_update">-</p>
+        </div>
+
+        <div class="metric-card">
+            <h2>24 Hour History</h2>
+            <canvas id="weatherChart"></canvas>
         </div>
     </div>
 </body>
