@@ -1,10 +1,12 @@
 from flask import Flask, render_template, request, jsonify
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from models import LocalMetrics, WeatherMetrics, init_db
+#from models import LocalMetrics, WeatherMetrics, init_db
+from models import init_db
 import json
 import secrets
 from datetime import datetime, timedelta
+from database_manager import DatabaseOperations
 
 app = Flask(__name__, template_folder='templates')
 app.config['SECRET_KEY'] = secrets.token_hex(16)
@@ -16,27 +18,34 @@ Session = sessionmaker(bind=engine)
 def get_latest_metrics():
     session = Session()
     try:
-        latest_local = session.query(LocalMetrics).order_by(LocalMetrics.timestamp.desc()).first()
-        latest_weather = session.query(WeatherMetrics).order_by(WeatherMetrics.timestamp.desc()).first()
+        db_ops = DatabaseOperations(session)
+        
+        # Get both local and weather metrics
+        local_data = db_ops.get_latest_local_metrics()
+        weather_data = db_ops.get_latest_weather_metrics()
 
-        print("Debug - Latest Local:", latest_local)  # Debug log
-        print("Debug - Latest Weather:", latest_weather)  # Debug log
+        print("Debug - Latest Local:", local_data)  # Debug log
+        print("Debug - Latest Weather:", weather_data)  # Debug log
 
         metrics = {}
-        if latest_local:
+        
+        if local_data and 'local' in local_data:
             metrics['local'] = {
-                'battery_percent': latest_local.battery_percent,
-                'memory_usage': latest_local.memory_usage
+                'battery_percent': local_data['local']['battery_percent'],
+                'memory_usage': local_data['local']['memory_usage']
             }
-        if latest_weather:
+            
+        if weather_data and 'weather' in weather_data:
             metrics['weather'] = {
-                'temperature': latest_weather.temperature,
-                'humidity': latest_weather.humidity,
-                'description': latest_weather.description,
-                'city': latest_weather.city
+                'temperature': weather_data['weather']['temperature'],
+                'humidity': weather_data['weather']['humidity'],
+                'description': weather_data['weather']['description'],
+                'city': weather_data['weather']['city']
             }
-        print("Debug - Returning metrics:", metrics)  # Debug log
+
+        print("Debug - Returning metrics:", metrics) 
         return metrics if metrics else None
+        
     finally:
         session.close()
 
@@ -48,15 +57,8 @@ def index():
 def local():
     session = Session()
     try:
-        latest = session.query(LocalMetrics).order_by(LocalMetrics.timestamp.desc()).first()
-        initial_data = {
-            'local': {
-                'battery_percent': latest.battery_percent,
-                'memory_usage': latest.memory_usage,
-                'timestamp': latest.timestamp.isoformat()
-            }
-        } if latest else None
-        print("Loading local page, latest metrics:", initial_data)  # Debug log
+        db_ops = DatabaseOperations(session)
+        initial_data = db_ops.get_latest_local_metrics()
         return render_template('local.html', initial_data=initial_data)
     finally:
         session.close()
@@ -65,16 +67,8 @@ def local():
 def weather():
     session = Session()
     try:
-        latest = session.query(WeatherMetrics).order_by(WeatherMetrics.timestamp.desc()).first()
-        initial_data = {
-            'weather': {
-                'temperature': latest.temperature,
-                'humidity': latest.humidity,
-                'description': latest.description,
-                'city': latest.city,
-                'timestamp': latest.timestamp.isoformat()
-            }
-        } if latest else None
+        db_ops = DatabaseOperations(session)
+        initial_data = db_ops.get_latest_weather_metrics()
         return render_template('weather.html', initial_data=initial_data)
     finally:
         session.close()
@@ -86,25 +80,16 @@ def handle_metrics():
     session = Session()
 
     try:
-        if 'local' in metrics:
-            local = LocalMetrics(
-                battery_percent=metrics['local']['battery_percent'],
-                memory_usage=metrics['local']['memory_usage']
-            )
-            session.add(local)
-
-        if 'weather' in metrics:
-            weather = WeatherMetrics(
-                temperature=metrics['weather']['temperature'],
-                humidity=metrics['weather']['humidity'],
-                description=metrics['weather']['description'],
-                city=metrics['weather']['city']
-            )
-            session.add(weather)
-
-        session.commit()
-        print("Metrics saved to database")
-        return jsonify({"status": "success"}), 200
+        db_ops = DatabaseOperations(session)
+        success, message = db_ops.store_metrics(metrics)
+        
+        if success:
+            print("Metrics saved to database")
+            return jsonify({"status": "success", "message": message}), 200
+        else:
+            print(f"Error saving metrics: {message}")
+            return jsonify({"status": "error", "message": message}), 500
+            
     except Exception as e:
         print(f"Error saving metrics: {str(e)}")
         return jsonify({"status": "error", "message": str(e)}), 500
@@ -115,14 +100,17 @@ def handle_metrics():
 def local_history():
     session = Session()
     try:
-        latest = session.query(LocalMetrics).order_by(LocalMetrics.timestamp.desc()).first()
-        if latest:
+        db_ops = DatabaseOperations(session)
+        latest = db_ops.get_latest_local_metrics()
+        
+        if latest and 'local' in latest:
             return {
-                'timestamps': [latest.timestamp.isoformat()],
-                'battery': [latest.battery_percent],
-                'memory': [latest.memory_usage],
-                'last_updated': latest.timestamp.isoformat()
+                'timestamps': [latest['local']['timestamp']],
+                'battery': [float(latest['local']['battery_percent'])],
+                'memory': [float(latest['local']['memory_usage'])],
+                'last_updated': latest['local']['timestamp']
             }
+
         return {
             'timestamps': [],
             'battery': [],
@@ -136,16 +124,19 @@ def local_history():
 def weather_history():
     session = Session()
     try:
-        latest = session.query(WeatherMetrics).order_by(WeatherMetrics.timestamp.desc()).first()
-        if latest:
+        db_ops = DatabaseOperations(session)
+        latest = db_ops.get_latest_weather_metrics()
+        
+        if latest and 'weather' in latest:
             return {
-                'timestamps': [latest.timestamp.isoformat()],
-                'temperature': [latest.temperature],
-                'humidity': [latest.humidity],
-                'description': [latest.description],
-                'city': [latest.city],
-                'last_updated': latest.timestamp.isoformat()
+                'timestamps': [latest['weather']['timestamp']],
+                'temperature': [float(latest['weather']['temperature'])],
+                'humidity': [float(latest['weather']['humidity'])],
+                'description': [latest['weather']['description']],
+                'city': [latest['weather']['city']],
+                'last_updated': latest['weather']['timestamp']
             }
+        
         return {
             'timestamps': [],
             'temperature': [],
@@ -157,32 +148,32 @@ def weather_history():
     finally:
         session.close()
 
-@app.route('/view_data')
-def view_data():
-    session = Session()
-    try:
-        local = session.query(LocalMetrics).all()
-        weather = session.query(WeatherMetrics).all()
-        return {
-            'local_metrics': [
-                {
-                    'timestamp': m.timestamp.isoformat(),
-                    'battery': m.battery_percent,
-                    'memory': m.memory_usage
-                } for m in local
-            ],
-            'weather_metrics': [
-                {
-                    'timestamp': m.timestamp.isoformat(),
-                    'temperature': m.temperature,
-                    'humidity': m.humidity,
-                    'description': m.description,
-                    'city': m.city
-                } for m in weather
-            ]
-        }
-    finally:
-        session.close()
+# @app.route('/view_data')
+# def view_data():
+#     session = Session()
+#     try:
+#         local = session.query(LocalMetrics).all()
+#         weather = session.query(WeatherMetrics).all()
+#         return {
+#             'local_metrics': [
+#                 {
+#                     'timestamp': m.timestamp.isoformat(),
+#                     'battery': m.battery_percent,
+#                     'memory': m.memory_usage
+#                 } for m in local
+#             ],
+#             'weather_metrics': [
+#                 {
+#                     'timestamp': m.timestamp.isoformat(),
+#                     'temperature': m.temperature,
+#                     'humidity': m.humidity,
+#                     'description': m.description,
+#                     'city': m.city
+#                 } for m in weather
+#             ]
+#         }
+#     finally:
+#         session.close()
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
