@@ -53,21 +53,45 @@
         }
     </style>
     <script>
-        function sendCommand(command) {
-            let deviceId = localStorage.getItem('deviceId');
-            if (!deviceId) {
-                deviceId = prompt("Please enter your device ID (check the device_id.txt file on your local machine):");
-                if (deviceId) {
-                    localStorage.setItem('deviceId', deviceId);
-                }
-            }
+        let defaultDeviceId = null;
+
+        // Fetch the default device ID when the page loads
+        window.addEventListener('DOMContentLoaded', async () => {
+            const statusElement = document.getElementById('actionStatus');
+            statusElement.textContent = 'Connecting to device...';
             
-            if (!deviceId) {
-                document.getElementById('actionStatus').textContent = 'No device ID provided';
+            try {
+                const response = await fetch('/api/default_device');
+                const data = await response.json();
+                if (data.device_id) {
+                    defaultDeviceId = data.device_id;
+                    console.log('Using device ID:', defaultDeviceId);
+                    statusElement.textContent = 'Device connected';
+                    statusElement.style.color = '#28a745';  // Green color for success
+                } else {
+                    statusElement.textContent = 'No device found. Make sure the metrics collector is running.';
+                    statusElement.style.color = '#dc3545';  // Red color for error
+                }
+            } catch (error) {
+                console.error('Error fetching default device ID:', error);
+                statusElement.textContent = 'Error connecting to device. Is the metrics collector running?';
+                statusElement.style.color = '#dc3545';  // Red color for error
+            }
+        });
+
+        function sendCommand(command) {
+            const statusElement = document.getElementById('actionStatus');
+            
+            if (!defaultDeviceId) {
+                statusElement.textContent = 'No device connected. Please start the metrics collector.';
+                statusElement.style.color = '#dc3545';  // Red color for error
                 return;
             }
 
-            fetch(`/api/command/${deviceId}`, {
+            statusElement.textContent = 'Sending command...';
+            statusElement.style.color = '#666';  // Default color
+
+            fetch(`/api/command/${defaultDeviceId}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -76,10 +100,12 @@
             })
             .then(response => response.json())
             .then(data => {
-                document.getElementById('actionStatus').textContent = data.message;
+                statusElement.textContent = data.message;
+                statusElement.style.color = '#28a745';  // Green color for success
             })
             .catch(error => {
-                document.getElementById('actionStatus').textContent = 'Error sending command';
+                statusElement.textContent = 'Error sending command';
+                statusElement.style.color = '#dc3545';  // Red color for error
                 console.error('Error:', error);
             });
         }

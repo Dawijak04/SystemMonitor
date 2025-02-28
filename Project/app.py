@@ -1,8 +1,8 @@
 from flask import Flask, render_template, request, jsonify
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, desc
 from sqlalchemy.orm import sessionmaker
 #from models import LocalMetrics, WeatherMetrics, init_db
-from models import init_db
+from models import init_db, Device
 import json
 import secrets
 from datetime import datetime, timedelta
@@ -188,7 +188,39 @@ def get_commands(device_id):
     print(f"Device {device_id} checking for commands, returning: {command}")  
     return jsonify({"command": command}), 200
 
+@app.route('/api/default_device', methods=['GET'])
+def get_default_device():
+    print("Getting default device...")
+    session = Session()
+    try:
+        device = session.query(Device).order_by(desc(Device.last_seen)).first()
+        print(f"Found device: {device}") 
+        
+        if device:
+            return jsonify({"device_id": device.device_id})
+        
+        print("No device found")  
+        return jsonify({"device_id": None, "error": "No active device found"}), 404
+    finally:
+        session.close()
 
+@app.route('/debug/devices')
+def debug_devices():
+    session = Session()
+    try:
+        devices = session.query(Device).all()
+        return jsonify({
+            "devices": [
+                {
+                    "id": d.id,
+                    "device_id": d.device_id,
+                    "last_seen": d.last_seen.isoformat() if d.last_seen else None
+                }
+                for d in devices
+            ]
+        })
+    finally:
+        session.close()
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
