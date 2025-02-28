@@ -15,6 +15,9 @@ app.config['SECRET_KEY'] = secrets.token_hex(16)
 engine = init_db()
 Session = sessionmaker(bind=engine)
 
+# Simple in-memory storage for last command
+last_commands = {}
+
 def get_latest_metrics():
     session = Session()
     try:
@@ -154,7 +157,7 @@ def local_24h_history():
     try:
         db_ops = DatabaseOperations(session)
         data = db_ops.get_local_metrics_24h()
-        print("24h data:", data)  # Debug print
+        print("24h data:", data)  
         return data
     finally:
         session.close()
@@ -168,32 +171,24 @@ def weather_24h_history():
     finally:
         session.close()
 
-# @app.route('/view_data')
-# def view_data():
-#     session = Session()
-#     try:
-#         local = session.query(LocalMetrics).all()
-#         weather = session.query(WeatherMetrics).all()
-#         return {
-#             'local_metrics': [
-#                 {
-#                     'timestamp': m.timestamp.isoformat(),
-#                     'battery': m.battery_percent,
-#                     'memory': m.memory_usage
-#                 } for m in local
-#             ],
-#             'weather_metrics': [
-#                 {
-#                     'timestamp': m.timestamp.isoformat(),
-#                     'temperature': m.temperature,
-#                     'humidity': m.humidity,
-#                     'description': m.description,
-#                     'city': m.city
-#                 } for m in weather
-#             ]
-#         }
-#     finally:
-#         session.close()
+@app.route('/api/command/<device_id>', methods=['POST'])
+def send_command(device_id):
+    command = request.json.get('command')
+    print(f"Received command request for device {device_id}: {command}") 
+    if not command:
+        return jsonify({"status": "error", "message": "No command specified"}), 400
+
+    last_commands[device_id] = command
+    
+    return jsonify({"status": "success", "message": "Command sent successfully", "command": command}), 200
+
+@app.route('/api/command/<device_id>', methods=['GET'])
+def get_commands(device_id):
+    command = last_commands.pop(device_id, None)
+    print(f"Device {device_id} checking for commands, returning: {command}")  
+    return jsonify({"command": command}), 200
+
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

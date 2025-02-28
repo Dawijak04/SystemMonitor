@@ -41,11 +41,49 @@
             text-decoration: none;
             border-radius: 5px;
             transition: background-color 0.3s ease;
+            cursor: pointer;
+            border: none;
         }
         .button:hover {
             background-color: #0056b3;
         }
+        #actionStatus {
+            margin-top: 10px;
+            color: #666;
+        }
     </style>
+    <script>
+        function sendCommand(command) {
+            let deviceId = localStorage.getItem('deviceId');
+            if (!deviceId) {
+                deviceId = prompt("Please enter your device ID (check the device_id.txt file on your local machine):");
+                if (deviceId) {
+                    localStorage.setItem('deviceId', deviceId);
+                }
+            }
+            
+            if (!deviceId) {
+                document.getElementById('actionStatus').textContent = 'No device ID provided';
+                return;
+            }
+
+            fetch(`/api/command/${deviceId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ command: command })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('actionStatus').textContent = data.message;
+            })
+            .catch(error => {
+                document.getElementById('actionStatus').textContent = 'Error sending command';
+                console.error('Error:', error);
+            });
+        }
+    </script>
 </head>
 <body>
     <div class="container">
@@ -61,6 +99,13 @@
             <h2>Weather Metrics</h2>
             <p>Check current weather conditions for your location.</p>
             <a href="/weather" class="button">View Weather Metrics</a>
+        </div>
+
+        <div class="card">
+            <h2>Remote Actions</h2>
+            <p>Control your local machine remotely.</p>
+            <button onclick="sendCommand('open_weather')" class="button">Open Weather App</button>
+            <div id="actionStatus"></div>
         </div>
     </div>
 </body>
