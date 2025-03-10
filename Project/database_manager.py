@@ -14,15 +14,41 @@ class DatabaseOperations:
     def store_metrics(self, metrics_data: dict):
         """Store metrics from a device"""
         try:
+            # Log the incoming device ID for debugging
+            print(f"Processing metrics from device ID: {metrics_data['device_id']}")
+            
             device = self.session.query(Device).filter_by(device_id=metrics_data["device_id"]).first()
+            is_new_device = False
+            
             if not device:
-                device = Device(device_id=metrics_data["device_id"])
+                is_new_device = True
+                device = Device(device_id=metrics_data["device_id"], admin=False)
                 self.session.add(device)
                 self.session.flush()
+                print(f"Created new device with ID: {device.device_id}, admin status: {device.admin}")
+            else:
+                print(f"Found existing device with ID: {device.device_id}, admin status: {device.admin}")
             
             device.last_seen = datetime.utcnow()
-            if metrics_data["device_id"] != self.config["admin_device_id"]:
+            
+            # Check for admin passkey and grant admin rights if valid
+            if "passkey" in metrics_data and metrics_data["passkey"] == self.config.get("admin_passkey"):
+                print(f"Valid admin passkey provided for device: {device.device_id}")
+                device.admin = True
+                self.session.flush()
+                print(f"Updated admin status to: {device.admin}")
+            
+            # Make sure we commit the device changes before checking admin status
+            self.session.commit()
+            
+            # Re-query to ensure we have the latest data
+            device = self.session.query(Device).filter_by(device_id=metrics_data["device_id"]).first()
+            
+            if not device.admin:
+                print(f"Device {device.device_id} doesn't have admin rights")
                 return True, "Device registered, but doesn't have admin rights"
+            
+            print(f"Processing metrics for admin device: {device.device_id}")
             
             for metric in metrics_data["metrics"]:
                 metric_type = self.session.query(MetricType).filter_by(name=metric["metric_type"]).first()
@@ -48,6 +74,7 @@ class DatabaseOperations:
             return True, "Metrics stored successfully"
         except Exception as e:
             self.session.rollback()
+            print(f"Error in store_metrics: {str(e)}")
             return False, str(e)
         
 
