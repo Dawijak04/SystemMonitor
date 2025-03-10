@@ -156,8 +156,24 @@
             // Initialize chart when page loads
             initChart();
             updateChart();
-            // Update chart every 5 minutes
-            setInterval(updateChart, 300000);
+            // Update chart every 15 seconds
+            setInterval(updateChart, 15000);
+
+            // Function to convert UTC timestamps to local time
+            function convertTimestampsToLocal() {
+                const timestampElements = document.querySelectorAll('.utc-timestamp');
+                
+                timestampElements.forEach(element => {
+                    const utcTimestamp = element.getAttribute('data-timestamp');
+                    if (utcTimestamp) {
+                        const localDate = new Date(utcTimestamp);
+                        element.textContent = localDate.toLocaleString();
+                    }
+                });
+            }
+            
+            // Run conversion when page loads
+            document.addEventListener('DOMContentLoaded', convertTimestampsToLocal);
         });
     </script>
 </head>

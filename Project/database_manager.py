@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from models import Device, MetricType, Metric
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import json
 import os
 
@@ -61,9 +61,19 @@ class DatabaseOperations:
                     self.session.add(metric_type)
                     self.session.flush()
                 
-                # Create new metric
+                # Parse the timestamp and ensure it's in UTC
+                timestamp = datetime.fromisoformat(metric["timestamp"])
+                # If the timestamp doesn't have timezone info, assume it's in UTC
+                if timestamp.tzinfo is None:
+                    # Create a UTC timestamp
+                    timestamp = timestamp.replace(tzinfo=None)  # Ensure no timezone info for SQLite compatibility
+                else:
+                    # Convert to UTC and remove timezone info for storage
+                    timestamp = timestamp.astimezone(timezone.utc).replace(tzinfo=None)
+                
+                # Create new metric with UTC timestamp
                 new_metric = Metric(
-                    timestamp=datetime.fromisoformat(metric["timestamp"]),
+                    timestamp=timestamp,
                     value=str(metric["value"]),
                     device_id=device.id,
                     metric_type_id=metric_type.id

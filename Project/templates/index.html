@@ -109,6 +109,22 @@
                 console.error('Error:', error);
             });
         }
+
+        // Function to convert UTC timestamps to local time
+        function convertTimestampsToLocal() {
+            const timestampElements = document.querySelectorAll('.utc-timestamp');
+            
+            timestampElements.forEach(element => {
+                const utcTimestamp = element.getAttribute('data-timestamp');
+                if (utcTimestamp) {
+                    const localDate = new Date(utcTimestamp);
+                    element.textContent = localDate.toLocaleString();
+                }
+            });
+        }
+        
+        // Run conversion when page loads
+        document.addEventListener('DOMContentLoaded', convertTimestampsToLocal);
     </script>
 </head>
 <body>
