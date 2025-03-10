@@ -1,5 +1,5 @@
-from datetime import datetime
-from sqlalchemy import create_engine, Column, Integer, Float, String, DateTime, ForeignKey, Boolean
+from datetime import datetime, timezone
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, ForeignKey, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 import os
@@ -11,7 +11,7 @@ class Device(Base):
     
     id = Column(Integer, primary_key=True)
     device_id = Column(String(100), unique=True, nullable=False) 
-    last_seen = Column(DateTime, default=datetime.utcnow)
+    last_seen = Column(DateTime, default=datetime.now(timezone.utc))
     admin = Column(Boolean, default=False)
 
     metrics = relationship("Metric", back_populates="device", cascade="all, delete-orphan")

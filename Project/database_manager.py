@@ -14,14 +14,13 @@ class DatabaseOperations:
     def store_metrics(self, metrics_data: dict):
         """Store metrics from a device"""
         try:
-            # Log the incoming device ID for debugging
+
             print(f"Processing metrics from device ID: {metrics_data['device_id']}")
             
             device = self.session.query(Device).filter_by(device_id=metrics_data["device_id"]).first()
-            is_new_device = False
             
+            #if device is new, register to it db 
             if not device:
-                is_new_device = True
                 device = Device(device_id=metrics_data["device_id"], admin=False)
                 self.session.add(device)
                 self.session.flush()
@@ -29,27 +28,27 @@ class DatabaseOperations:
             else:
                 print(f"Found existing device with ID: {device.device_id}, admin status: {device.admin}")
             
-            device.last_seen = datetime.utcnow()
+            device.last_seen = datetime.now(timezone.utc)
             
-            # Check for admin passkey and grant admin rights if valid
+            #check for admin passkey 
             if "passkey" in metrics_data and metrics_data["passkey"] == self.config.get("admin_passkey"):
                 print(f"Valid admin passkey provided for device: {device.device_id}")
                 device.admin = True
                 self.session.flush()
                 print(f"Updated admin status to: {device.admin}")
             
-            # Make sure we commit the device changes before checking admin status
             self.session.commit()
             
-            # Re-query to ensure we have the latest data
+            #re-query to ensure latest data
             device = self.session.query(Device).filter_by(device_id=metrics_data["device_id"]).first()
             
             if not device.admin:
                 print(f"Device {device.device_id} doesn't have admin rights")
                 return True, "Device registered, but doesn't have admin rights"
             
-            print(f"Processing metrics for admin device: {device.device_id}")
+            print(f"Processing metrics for device: {device.device_id}")
             
+            #check if metrics type exists in db, if not, registers it 
             for metric in metrics_data["metrics"]:
                 metric_type = self.session.query(MetricType).filter_by(name=metric["metric_type"]).first()
                 if not metric_type:
@@ -61,17 +60,16 @@ class DatabaseOperations:
                     self.session.add(metric_type)
                     self.session.flush()
                 
-                # Parse the timestamp and ensure it's in UTC
+                #parse timestamp and ensure it's in UTC
                 timestamp = datetime.fromisoformat(metric["timestamp"])
-                # If the timestamp doesn't have timezone info, assume it's in UTC
+
                 if timestamp.tzinfo is None:
-                    # Create a UTC timestamp
-                    timestamp = timestamp.replace(tzinfo=None)  # Ensure no timezone info for SQLite compatibility
+                    timestamp = timestamp.replace(tzinfo=None)  #no tz info for SQLite compatibility
                 else:
-                    # Convert to UTC and remove timezone info for storage
                     timestamp = timestamp.astimezone(timezone.utc).replace(tzinfo=None)
-                
-                # Create new metric with UTC timestamp
+
+
+                #create new metric 
                 new_metric = Metric(
                     timestamp=timestamp,
                     value=str(metric["value"]),
@@ -82,6 +80,7 @@ class DatabaseOperations:
             
             self.session.commit()
             return True, "Metrics stored successfully"
+        
         except Exception as e:
             self.session.rollback()
             print(f"Error in store_metrics: {str(e)}")
@@ -163,10 +162,9 @@ class DatabaseOperations:
     def get_local_metrics_24h(self):
         """Get local metrics for the last 24 hours"""
         try:
-            twenty_four_hours_ago = datetime.utcnow() - timedelta(hours=24)
+            twenty_four_hours_ago = datetime.now(timezone.utc) - timedelta(hours=24)
             
-            metrics = {}
-            timestamps = set()
+            metrics_by_timestamp = {}
             
             for metric_type_name in ["battery_percent", "memory_usage"]:
                 results = (self.session.query(Metric, MetricType)
@@ -178,38 +176,53 @@ class DatabaseOperations:
                     .order_by(Metric.timestamp.asc())  
                     .all())
                 
-                if results:
+                for m in results:
+                    timestamp = m[0].timestamp.isoformat() + "+00:00"
+                    value = float(m[0].value)
+                    
+                    if timestamp not in metrics_by_timestamp:
+                        metrics_by_timestamp[timestamp] = {}
+                    
                     key = "battery" if metric_type_name == "battery_percent" else "memory"
-                    metrics[key] = [float(m[0].value) for m in results]
-                    timestamps.update(m[0].timestamp.isoformat() for m in results)
+                    metrics_by_timestamp[timestamp][key] = value
             
-            # Convert timestamps to sorted list
-            timestamps_list = sorted(list(timestamps))
+            sorted_timestamps = sorted(metrics_by_timestamp.keys())
             
-            if metrics:
-                return {
-                    'timestamps': timestamps_list,
-                    'battery': metrics.get('battery', []),
-                    'memory': metrics.get('memory', []),
-                }
+            battery_values = []
+            memory_values = []
+            
+            last_battery = 0
+            last_memory = 0
+            
+            for ts in sorted_timestamps:
+                metrics = metrics_by_timestamp[ts]
+
+                if "battery" in metrics:
+                    last_battery = metrics["battery"]
+                battery_values.append(last_battery)
+                
+                if "memory" in metrics:
+                    last_memory = metrics["memory"]
+                memory_values.append(last_memory)
+            
             
             return {
-                'timestamps': [],
-                'battery': [],
-                'memory': []
+                'timestamps': sorted_timestamps,
+                'battery': battery_values,
+                'memory': memory_values,
             }
             
         except Exception as e:
             self.session.rollback()
+            print(f"Error in get_local_metrics_24h: {str(e)}")
             return {'error': str(e)}
 
     def get_weather_metrics_24h(self):
         """Get weather metrics for the last 24 hours"""
         try:
-            twenty_four_hours_ago = datetime.utcnow() - timedelta(hours=24)
+            twenty_four_hours_ago = datetime.now(timezone.utc) - timedelta(hours=24)
             
-            metrics = {}
-            timestamps = set()
+            metrics_by_timestamp = {}
             
             for metric_type_name in ["temperature", "humidity"]:
                 results = (self.session.query(Metric, MetricType)
@@ -218,29 +231,45 @@ class DatabaseOperations:
                         MetricType.name == metric_type_name,
                         Metric.timestamp >= twenty_four_hours_ago
                     )
-                    .order_by(Metric.timestamp.asc())
+                    .order_by(Metric.timestamp.asc())  
                     .all())
                 
-                if results:
-                    metrics[metric_type_name] = [float(m[0].value) for m in results]
-                    timestamps.update(m[0].timestamp.isoformat() for m in results)
+                for m in results:
+                    timestamp = m[0].timestamp.isoformat() + "+00:00"
+                    value = float(m[0].value)
+                    
+                    if timestamp not in metrics_by_timestamp:
+                        metrics_by_timestamp[timestamp] = {}
+                    
+                    metrics_by_timestamp[timestamp][metric_type_name] = value
             
-            # Convert timestamps to sorted list
-            timestamps_list = sorted(list(timestamps))
+            sorted_timestamps = sorted(metrics_by_timestamp.keys())
             
-            if metrics:
-                return {
-                    'timestamps': timestamps_list,
-                    'temperature': metrics.get('temperature', []),
-                    'humidity': metrics.get('humidity', [])
-                }
+            temp_values = []
+            humidity_values = []
+            
+            last_temp = 0
+            last_humidity = 0
+            
+            for ts in sorted_timestamps:
+                metrics = metrics_by_timestamp[ts]
+
+                if "temperature" in metrics:
+                    last_temp = metrics["temperature"]
+                temp_values.append(last_temp)
+                
+                if "humidity" in metrics:
+                    last_humidity = metrics["humidity"]
+                humidity_values.append(last_humidity)
+            
             
             return {
-                'timestamps': [],
-                'temperature': [],
-                'humidity': []
+                'timestamps': sorted_timestamps,
+                'temperature': temp_values,
+                'humidity': humidity_values
             }
             
         except Exception as e:
             self.session.rollback()
+            print(f"Error in get_weather_metrics_24h: {str(e)}")
             return {'error': str(e)}
