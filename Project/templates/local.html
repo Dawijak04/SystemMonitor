@@ -61,16 +61,20 @@
                         data.local.battery_percent + '%';
                     document.getElementById('memory').textContent = 
                         data.local.memory_usage + '%';
-                    const timestamp = new Date(data.local.timestamp);
-                    document.getElementById('last_update').textContent = 
-                        timestamp.toLocaleString();
+                    
+                    // Update last_update 
+                    const lastUpdateElement = document.getElementById('last_update');
+                    lastUpdateElement.setAttribute('data-timestamp', data.local.timestamp);
+                    
+                    // Convert UTC timestamps to local time
+                    convertTimestampsToLocal();
                 }
             }
 
             // Initial update
             updateMetrics(data);
 
-            // Poll for new data every 5 seconds
+            // Poll for new data every 10 seconds
             setInterval(() => {
                 fetch('/api/history/local')
                     .then(response => response.json())
@@ -87,7 +91,7 @@
                         }
                     })
                     .catch(error => console.error('Error fetching metrics:', error));
-            }, 5000);  // Update every 5 seconds
+            }, 10000);  // Update every 10 seconds
 
             // Clock update
             function updateClock() {
@@ -156,8 +160,8 @@
             // Initialize chart when page loads
             initChart();
             updateChart();
-            // Update chart every 15 seconds
-            setInterval(updateChart, 15000);
+            // Update chart every 10 seconds
+            setInterval(updateChart, 10000);
 
             // Function to convert UTC timestamps to local time
             function convertTimestampsToLocal() {
@@ -172,8 +176,6 @@
                 });
             }
             
-            // Run conversion when page loads
-            document.addEventListener('DOMContentLoaded', convertTimestampsToLocal);
         });
     </script>
 </head>
@@ -200,7 +202,7 @@
         </div>
         <div class="card">
             <h2>Last Updated</h2>
-            <p id="last_update">-</p>
+            <p id="last_update" class="utc-timestamp" data-timestamp="">-</p>
         </div>
 
         <div class="metric-card">

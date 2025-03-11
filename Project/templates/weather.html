@@ -36,6 +36,22 @@
             border-radius: 5px;
             margin-bottom: 20px;
         }
+        .time-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .time-display {
+            font-size: 2em;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .time-info {
+            font-size: 1em;
+            color: #6c757d;
+        }
     </style>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -56,16 +72,20 @@
                         data.weather.description;
                     document.getElementById('city').textContent = 
                         data.weather.city;
-                    const timestamp = new Date(data.weather.timestamp);
-                    document.getElementById('last_update').textContent = 
-                        timestamp.toLocaleString();
+
+                    // Update last_update with timestamp
+                    const lastUpdateElement = document.getElementById('last_update');
+                    lastUpdateElement.setAttribute('data-timestamp', data.weather.timestamp);
+                    
+                    // Convert UTC timestamps to local time
+                    convertTimestampsToLocal();
                 }
             }
 
             // Initial update
             updateMetrics(data);
 
-            // Poll for new data every 5 seconds
+            // Poll for new data every 10 seconds
             setInterval(() => {
                 fetch('/api/history/weather')
                     .then(response => response.json())
@@ -84,7 +104,7 @@
                         }
                     })
                     .catch(error => console.error('Error fetching metrics:', error));
-            }, 5000);  // Update every 5 seconds
+            }, 10000);  // Update every 10 seconds
 
             // Clock update
             function updateClock() {
@@ -109,89 +129,84 @@
                     }
                 });
             }
-            
-            // Run conversion when page loads
-            document.addEventListener('DOMContentLoaded', convertTimestampsToLocal);
-        });
 
-        let weatherChart;
+            let weatherChart;
 
-        function initChart() {
-            const ctx = document.getElementById('weatherChart').getContext('2d');
-            weatherChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: [],
-                    datasets: [
-                        {
-                            label: 'Temperature °C',
-                            data: [],
-                            borderColor: 'rgb(255, 99, 132)',
-                            yAxisID: 'y-temperature',
-                            tension: 0.1
-                        },
-                        {
-                            label: 'Humidity %',
-                            data: [],
-                            borderColor: 'rgb(75, 192, 192)',
-                            yAxisID: 'y-humidity',
-                            tension: 0.1
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        'y-temperature': {
-                            type: 'linear',
-                            display: true,
-                            position: 'left',
-                            title: {
-                                display: true,
-                                text: 'Temperature (°C)'
-                            }
-                        },
-                        'y-humidity': {
-                            type: 'linear',
-                            display: true,
-                            position: 'right',
-                            title: {
-                                display: true,
-                                text: 'Humidity (%)'
+            function initChart() {
+                const ctx = document.getElementById('weatherChart').getContext('2d');
+                weatherChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: [
+                            {
+                                label: 'Temperature °C',
+                                data: [],
+                                borderColor: 'rgb(255, 99, 132)',
+                                yAxisID: 'y-temperature',
+                                tension: 0.1
                             },
-                            grid: {
-                                drawOnChartArea: false
+                            {
+                                label: 'Humidity %',
+                                data: [],
+                                borderColor: 'rgb(75, 192, 192)',
+                                yAxisID: 'y-humidity',
+                                tension: 0.1
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            'y-temperature': {
+                                type: 'linear',
+                                display: true,
+                                position: 'left',
+                                title: {
+                                    display: true,
+                                    text: 'Temperature (°C)'
+                                }
+                            },
+                            'y-humidity': {
+                                type: 'linear',
+                                display: true,
+                                position: 'right',
+                                title: {
+                                    display: true,
+                                    text: 'Humidity (%)'
+                                },
+                                grid: {
+                                    drawOnChartArea: false
+                                }
                             }
                         }
                     }
-                }
-            });
-        }
+                });
+            }
 
-        function updateChart() {
-            fetch('/api/weather/24h')
-                .then(response => response.json())
-                .then(data => {
-                    // Format timestamps for display
-                    const labels = data.timestamps.map(ts => {
-                        const date = new Date(ts);
-                        return date.toLocaleTimeString();
-                    });
-                    
-                    weatherChart.data.labels = labels;
-                    weatherChart.data.datasets[0].data = data.temperature;
-                    weatherChart.data.datasets[1].data = data.humidity;
-                    weatherChart.update();
-                })
-                .catch(error => console.error('Error fetching chart data:', error));
-        }
+            function updateChart() {
+                fetch('/api/weather/24h')
+                    .then(response => response.json())
+                    .then(data => {
+                        // Format timestamps for display
+                        const labels = data.timestamps.map(ts => {
+                            const date = new Date(ts);
+                            return date.toLocaleTimeString();
+                        });
+                        
+                        weatherChart.data.labels = labels;
+                        weatherChart.data.datasets[0].data = data.temperature;
+                        weatherChart.data.datasets[1].data = data.humidity;
+                        weatherChart.update();
+                    })
+                    .catch(error => console.error('Error fetching chart data:', error));
+            }
 
-        // Initialize chart when page loads
-        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize chart
             initChart();
             updateChart();
-            // Update chart every 15 minutes
-            setInterval(updateChart, 15000);
+            // Update chart every 10 seconds
+            setInterval(updateChart, 10000);
         });
     </script>
 </head>
@@ -222,7 +237,14 @@
         
         <div class="card">
             <h2>Last Updated</h2>
-            <p id="last_update">-</p>
+            <p id="last_update" class="utc-timestamp" data-timestamp="">-</p>
+        </div>
+
+        <div class="metric-card time-card">
+            <h2>Local Time</h2>
+            <div class="time-display" id="time">-</div>
+            <div class="time-info" id="date">-</div>
+            <div class="time-info" id="timezone">-</div>
         </div>
 
         <div class="metric-card">
