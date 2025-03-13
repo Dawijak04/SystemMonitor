@@ -31,7 +31,7 @@ class DatabaseOperations:
             device.last_seen = datetime.now(timezone.utc)
             
             #check for admin passkey 
-            if "passkey" in metrics_data and metrics_data["passkey"] == self.config.get("admin_passkey"):
+            if "passkey" in metrics_data and metrics_data["passkey"] == self.config.get("admin_passkey") and device.admin == False:
                 print(f"Valid admin passkey provided for device: {device.device_id}")
                 device.admin = True
                 self.session.flush()

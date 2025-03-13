@@ -214,6 +214,13 @@
     <div class="container">
         <a href="/" class="back-button">← Back to Dashboard</a>
         <h1>Weather Metrics</h1>
+
+        <div class="metric-card time-card">
+            <h2>Local Time</h2>
+            <div class="time-display" id="time">-</div>
+            <div class="time-info" id="date">-</div>
+            <div class="time-info" id="timezone">-</div>
+        </div>
         
         <div class="metric-card">
             <h2>Location</h2>
@@ -238,13 +245,6 @@
         <div class="card">
             <h2>Last Updated</h2>
             <p id="last_update" class="utc-timestamp" data-timestamp="">-</p>
-        </div>
-
-        <div class="metric-card time-card">
-            <h2>Local Time</h2>
-            <div class="time-display" id="time">-</div>
-            <div class="time-info" id="date">-</div>
-            <div class="time-info" id="timezone">-</div>
         </div>
 
         <div class="metric-card">
