@@ -52,13 +52,17 @@ class DatabaseOperations:
             for metric in metrics_data["metrics"]:
                 metric_type = self.session.query(MetricType).filter_by(name=metric["metric_type"]).first()
                 if not metric_type:
-                    metric_type = MetricType(
-                        name=metric["metric_type"],
-                        data_type=metric["data_type"],
-                        unit=metric["unit"]
-                    )
-                    self.session.add(metric_type)
-                    self.session.flush()
+                    if metric["metric_type"] is not None and metric["data_type"] is not None and metric["unit"] is not None:
+                        metric_type = MetricType(
+                            name=metric["metric_type"],
+                            data_type=metric["data_type"],
+                            unit=metric["unit"]
+                        )
+                        self.session.add(metric_type)
+                        self.session.flush()
+                        print(f"Created new metric type: {metric_type.name}")
+                    else:
+                        print(f"Couldn't create metric {metric['metric_type']}, missing data")
                 
                 #parse timestamp and ensure it's in UTC
                 timestamp = datetime.fromisoformat(metric["timestamp"])

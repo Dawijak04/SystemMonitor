@@ -65,7 +65,7 @@
                 if (data.device_id) {
                     defaultDeviceId = data.device_id;
                     console.log('Using device ID:', defaultDeviceId);
-                    statusElement.textContent = 'Device connected';
+                    statusElement.textContent = 'Device found';
                     statusElement.style.color = '#28a745';  // Green color for success
                 } else {
                     statusElement.textContent = 'No device found. Make sure the metrics collector is running.';
@@ -73,7 +73,7 @@
                 }
             } catch (error) {
                 console.error('Error fetching default device ID:', error);
-                statusElement.textContent = 'Error connecting to device. Is the metrics collector running?';
+                statusElement.textContent = 'Error finding to device. Is the metrics collector running?';
                 statusElement.style.color = '#dc3545';  // Red color for error
             }
         });
@@ -82,7 +82,7 @@
             const statusElement = document.getElementById('actionStatus');
             
             if (!defaultDeviceId) {
-                statusElement.textContent = 'No device connected. Please start the metrics collector.';
+                statusElement.textContent = 'No device found. Please start the metrics collector.';
                 statusElement.style.color = '#dc3545';  // Red color for error
                 return;
             }
